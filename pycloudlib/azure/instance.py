@@ -136,6 +136,7 @@ class AzureInstance(BaseInstance):
 
         if wait:
             restart.wait()
+            time.sleep(30)
             self.wait()
 
     def delete(self, wait=True):

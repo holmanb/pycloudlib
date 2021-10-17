@@ -7,7 +7,7 @@ from azure.mgmt.network import NetworkManagementClient
 from azure.mgmt.compute import ComputeManagementClient
 
 import pycloudlib.azure.util as util
-
+from pycloudlib.config import choose_config
 from pycloudlib.cloud import BaseCloud
 from pycloudlib.azure.instance import AzureInstance
 from pycloudlib.util import get_timestamped_tag, update_nested
@@ -28,7 +28,7 @@ class Azure(BaseCloud):
 
     def __init__(
         self, tag, timestamp_suffix=True, client_id=None, client_secret=None,
-        subscription_id=None, tenant_id=None, region="centralus"
+        subscription_id=None, tenant_id=None, region=None,
     ):
         """Initialize the connection to Azure.
 
@@ -48,7 +48,9 @@ class Azure(BaseCloud):
         """
         super().__init__(tag, timestamp_suffix)
         self._log.debug('logging into Azure')
-        self.location = region
+        self.location = choose_config(
+            self.config, 'region', region
+        ) or 'centralus'
         self.username = "ubuntu"
 
         self.registered_instances = {}
@@ -56,15 +58,23 @@ class Azure(BaseCloud):
 
         config_dict = {}
 
+        client_id = choose_config(self.config, 'client_id', client_id)
         if client_id:
             config_dict["clientId"] = client_id
 
+        client_secret = choose_config(
+            self.config, 'client_secret', client_secret
+        )
         if client_secret:
             config_dict["clientSecret"] = client_secret
 
+        subscription_id = choose_config(
+            self.config, 'subscription_id', subscription_id
+        )
         if subscription_id:
             config_dict["subscriptionId"] = subscription_id
 
+        tenant_id = choose_config(self.config, 'tenant_id', tenant_id)
         if tenant_id:
             config_dict["tenantId"] = tenant_id
 

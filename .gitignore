@@ -1,4 +1,5 @@
 # Python build and distribute items
+*.pyc
 __pycache__/
 .eggs
 *.egg-info/

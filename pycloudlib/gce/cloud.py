@@ -14,6 +14,7 @@ from itertools import count
 import googleapiclient.discovery
 
 from pycloudlib.cloud import BaseCloud
+from pycloudlib.config import choose_config
 from pycloudlib.gce.util import raise_on_error
 from pycloudlib.gce.instance import GceInstance
 from pycloudlib.util import subp
@@ -29,7 +30,7 @@ class GCE(BaseCloud):
 
     def __init__(
         self, tag, timestamp_suffix=True, credentials_path=None, project=None,
-        region="us-west2", zone="a", service_account_email=None
+        region=None, zone=None, service_account_email=None
     ):
         """Initialize the connection to GCE.
 
@@ -47,10 +48,13 @@ class GCE(BaseCloud):
         super().__init__(tag, timestamp_suffix)
         self._log.debug('logging into GCE')
 
+        credentials_path = choose_config(
+            self.config, 'credentials_path', credentials_path)
         if credentials_path:
             os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = str(
                 credentials_path)
 
+        project = choose_config(self.config, 'project', project)
         if project:
             os.environ["GOOGLE_CLOUD_PROJECT"] = str(project)
         elif "GOOGLE_CLOUD_PROJECT" in os.environ:
@@ -76,11 +80,15 @@ class GCE(BaseCloud):
         self.compute = googleapiclient.discovery.build(
             'compute', 'v1', cache_discovery=False
         )
+        region = choose_config(self.config, 'region', region) or 'us-west2'
+        zone = choose_config(self.config, 'zone', zone) or 'a'
         self.project = project
         self.region = region
         self.zone = '%s-%s' % (region, zone)
         self.instance_counter = count()
-        self.service_account_email = service_account_email
+        self.service_account_email = choose_config(
+            self.config, 'service_account_email', service_account_email
+        )
 
     def _find_image(self, release, daily, arch='amd64'):
         images = self._image_list(release, daily, arch)

@@ -9,6 +9,7 @@ import re
 import oci
 
 from pycloudlib.cloud import BaseCloud
+from pycloudlib.config import choose_config
 from pycloudlib.oci.instance import OciInstance
 from pycloudlib.oci.utils import wait_till_ready
 from pycloudlib.util import UBUNTU_RELEASE_VERSION_MAP, subp
@@ -20,8 +21,8 @@ class OCI(BaseCloud):
     _type = 'oci'
 
     def __init__(
-        self, tag, timestamp_suffix=True, *, availability_domain,
-        compartment_id=None, config_path='~/.oci/config'
+        self, tag, timestamp_suffix=True, *, availability_domain=None,
+        compartment_id=None, config_path=None
     ):
         """
         Initialize the connection to OCI.
@@ -40,8 +41,13 @@ class OCI(BaseCloud):
             config_path: Path of OCI config file
         """
         super().__init__(tag, timestamp_suffix)
-        self.availability_domain = availability_domain
+        self.availability_domain = availability_domain or self.config[
+            'availability_domain'
+        ]
 
+        compartment_id = choose_config(
+            self.config, 'compartment_id', compartment_id
+        )
         if not compartment_id:
             command = ['oci', 'iam', 'compartment', 'get']
             exception_text = (
@@ -59,6 +65,9 @@ class OCI(BaseCloud):
             compartment_id = json.loads(result.stdout)['data']['id']
         self.compartment_id = compartment_id
 
+        config_path = choose_config(
+            self.config, 'config_path', config_path
+        ) or '~/.oci/config'
         if not os.path.isfile(os.path.expanduser(config_path)):
             raise ValueError(
                 '{} is not a valid config file. '

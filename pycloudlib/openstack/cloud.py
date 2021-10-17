@@ -12,7 +12,7 @@ class Openstack(BaseCloud):
 
     _type = 'openstack'
 
-    def __init__(self, tag, network, timestamp_suffix=True):
+    def __init__(self, tag, timestamp_suffix=True, *, network=None):
         """Initialize the connection to openstack.
 
         Requires valid pre-configured environment variables or clouds.yaml.
@@ -25,7 +25,7 @@ class Openstack(BaseCloud):
                 tag
         """  # noqa: E501
         super().__init__(tag, timestamp_suffix)
-        self.network = network
+        self.network = network or self.config['network']
         self._openstack_keypair = None
         self.conn = openstack.connect()
 

@@ -4,6 +4,7 @@
 import botocore
 
 from pycloudlib.cloud import BaseCloud
+from pycloudlib.config import choose_config
 from pycloudlib.ec2.instance import EC2Instance
 from pycloudlib.ec2.util import _get_session, _tag_resource
 from pycloudlib.ec2.vpc import VPC
@@ -35,7 +36,12 @@ class EC2(BaseCloud):
         self._log.debug('logging into EC2')
 
         try:
-            session = _get_session(access_key_id, secret_access_key, region)
+            session = _get_session(
+                choose_config(self.config, 'access_key_id', access_key_id),
+                choose_config(
+                    self.config, 'secret_access_key', secret_access_key),
+                choose_config(self.config, 'region', region),
+            )
             self.client = session.client('ec2')
             self.resource = session.resource('ec2')
             self.region = session.region_name

@@ -5,8 +5,10 @@ import io
 import getpass
 import logging
 from abc import ABC, abstractmethod
+
 import paramiko
 
+from pycloudlib.config import parse_config
 from pycloudlib.key import KeyPair
 from pycloudlib.streams import Streams
 from pycloudlib.util import get_timestamped_tag, validate_tag
@@ -34,6 +36,7 @@ class BaseCloud(ABC):
             self.tag = validate_tag(get_timestamped_tag(tag))
         else:
             self.tag = validate_tag(tag)
+        self.config = parse_config()[self._type]
 
     @abstractmethod
     def delete_image(self, image_id):
