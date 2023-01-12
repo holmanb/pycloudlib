@@ -558,7 +558,7 @@ def instrument_unmount_failure(result):
     """
     if result.return_code:
         mount = re.findall(
-            r"Failed unmounting instance: Failed to unmount .+: "
+            r"Failed unmounting instance: Failed to unmount \"(.+)\": "
             r"device or resource busy", result.stderr)
         if mount:
             files = subp(['lsof', '+f', '--', mount[0]])
