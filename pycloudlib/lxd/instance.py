@@ -238,8 +238,6 @@ class LXDInstance(BaseInstance):
                 subp(["lxc", "delete", self.name, "--force"], rcs=[0, 1])
             )
 
-
-
         if wait:
             self.wait_for_delete()
 
@@ -559,13 +557,15 @@ def instrument_unmount_failure(result):
     if result.return_code:
         mount = re.findall(
             r"Failed unmounting instance: Failed to unmount \"(.+)\": "
-            r"device or resource busy", result.stderr)
+            r"device or resource busy",
+            result.stderr,
+        )
         if mount:
-            files = subp(['lsof', '+f', '--', mount[0]])
+            files = subp(["lsof", "+f", "--", mount[0]])
         else:
             files = "failure parsing lxd mount error"
 
         raise RuntimeError(
-            "Failure (rc=%s): %s, open files: [%s]" %
-            (result.return_code, result.stderr, files)
+            "Failure (rc=%s): %s, open files: [%s]"
+            % (result.return_code, result.stderr, files)
         )
