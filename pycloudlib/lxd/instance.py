@@ -234,7 +234,11 @@ class LXDInstance(BaseInstance):
             # instance will be deleted once it is stopped
             self.shutdown(wait=False)
         else:
-            subp(["lxc", "delete", self.name, "--force"])
+            instrument_unmount_failure(
+                subp(["lxc", "delete", self.name, "--force"], rcs=[0, 1])
+            )
+
+
 
         if wait:
             self.wait_for_delete()
@@ -543,3 +547,25 @@ class LXDVirtualMachineInstance(LXDInstance):
             super()._wait_for_instance_start()
         else:
             self.wait_for_state(desired_state="RUNNING", num_retries=200)
+
+
+def instrument_unmount_failure(result):
+    """Temporary instrumentation
+
+    introduced to aid debugging ephemeral failures in which lxd fails to
+    unmount during instance deletion - currently checks for open files, if
+    insufficient, further checks of the busy mountpoint may be required
+    """
+    if result.return_code:
+        mount = re.findall(
+            r"Failed unmounting instance: Failed to unmount .+: "
+            r"device or resource busy", result.stderr)
+        if mount:
+            files = subp(['lsof', '+f', '--', mount[0]])
+        else:
+            files = "failure parsing lxd mount error"
+
+        raise RuntimeError(
+            "Failure (rc=%s): %s, open files: [%s]" %
+            (result.return_code, result.stderr, files)
+        )
