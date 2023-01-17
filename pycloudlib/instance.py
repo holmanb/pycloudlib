@@ -37,7 +37,7 @@ class BaseInstance(ABC):
         self.port = "22"
         self.username = "ubuntu"
         self.connect_timeout = 60
-        self.banner_timeout = 60
+        self.banner_timeout = 200
 
     @property
     @abstractmethod
