@@ -166,12 +166,15 @@ class EC2(BaseCloud):
         filters = self._get_search_filters(
             release=release, arch=arch, image_type=image_type, daily=daily
         )
+        print(filters)
         owner = self._get_owner(image_type=image_type)
+        print(owner)
 
         images = self.client.describe_images(
             Owners=[owner],
             Filters=filters,
         )
+        print(images)
 
         if not images.get("Images"):
             raise ValueError(
