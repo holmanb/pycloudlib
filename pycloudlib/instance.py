@@ -35,7 +35,7 @@ class BaseInstance(ABC):
         self.boot_timeout = 120
         self.key_pair = key_pair
         self.port = "22"
-        self.username = "ubuntu"
+        self.username = "fedora"
         self.connect_timeout = 60
         self.banner_timeout = 200
 
