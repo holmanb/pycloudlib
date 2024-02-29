@@ -154,6 +154,7 @@ class GceInstance(BaseInstance):
 
     def wait_for_delete(self, sleep_seconds=30, raise_on_fail=False):
         """Wait for instance to be deleted."""
+        result = {}
         for _ in range(sleep_seconds):
             try:
                 result = self.instance.get(
@@ -161,7 +162,12 @@ class GceInstance(BaseInstance):
                     zone=self.zone,
                     instance=self.instance_id,
                 ).execute()
-                if result["status"] == "TERMINATED":
+                if result["status"] == "DONE":
+                    if "error" in result:
+                        self._log.warning(
+                            "Error terminating GCE instance:"
+                            f"{result['error']}"
+                        )
                     break
             except HttpError as e:
                 # Sometimes URL just 404s once deleted
@@ -171,7 +177,7 @@ class GceInstance(BaseInstance):
         else:
             msg = (
                 f"Instance not terminated after {sleep_seconds} seconds. "
-                "Check GCE console."
+                f"Check GCE console. result: {result}"
             )
             if raise_on_fail:
                 raise PycloudlibTimeoutError(msg)
